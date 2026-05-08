@@ -1,0 +1,392 @@
+-- STAY TO GET | SOUTH BRONX | BLUE EDITION
+-- Xeno Compatible | Full Feature
+
+local p = game.Players.LocalPlayer
+local c = p.Character or p.CharacterAdded:Wait()
+local r = c:WaitForChild("HumanoidRootPart")
+local h = c:WaitForChild("Humanoid")
+
+-- ========== SETTINGS ==========
+local s = {
+    esp = false,
+    farm = false,
+    cook = false,
+    sell = false,
+    tp = false,
+    speed = false,
+    noclip = false,
+    minimized = false,
+}
+
+-- ========== INV ==========
+local inv = { raw = 0, cooked = 0 }
+
+-- ========== ESP + NAMA ==========
+local espFolder = Instance.new("Folder")
+espFolder.Name = "STG_ESP"
+espFolder.Parent = game:GetService("CoreGui")
+
+local function createESP(part, color, name)
+    if not part then return end
+    
+    local hl = Instance.new("Highlight")
+    hl.FillColor = color
+    hl.OutlineColor = color
+    hl.FillTransparency = 0.5
+    hl.Adornee = part
+    hl.Parent = espFolder
+    
+    local bill = Instance.new("BillboardGui")
+    bill.Size = UDim2.new(0, 200, 0, 30)
+    bill.Adornee = part
+    bill.AlwaysOnTop = true
+    bill.Parent = espFolder
+    
+    local txt = Instance.new("TextLabel")
+    txt.Size = UDim2.new(1, 0, 1, 0)
+    txt.BackgroundTransparency = 1
+    txt.Text = name or "?"
+    txt.TextColor3 = color
+    txt.TextSize = 14
+    txt.Font = Enum.Font.GothamBold
+    txt.TextStrokeTransparency = 0.3
+    txt.Parent = bill
+end
+
+local function clearESP()
+    for _, v in pairs(espFolder:GetChildren()) do
+        v:Destroy()
+    end
+end
+
+-- ESP Loop
+spawn(function()
+    while wait(0.5) do
+        if not s.esp then 
+            clearESP()
+        else
+            for _, v in pairs(workspace:GetDescendants()) do
+                if v.Name and v.Name:lower():find("marsh") and v:IsA("BasePart") then
+                    if not v:FindFirstChildWhichIsA("Highlight") then
+                        createESP(v, Color3.fromRGB(0,255,0), "🍬")
+                    end
+                end
+            end
+            for _, v in pairs(workspace:GetDescendants()) do
+                if v.Name and (v.Name:lower():find("stove") or v.Name:lower():find("kompor")) and v:IsA("BasePart") then
+                    if not v:FindFirstChildWhichIsA("Highlight") then
+                        createESP(v, Color3.fromRGB(255,200,0), "🍳")
+                    end
+                end
+            end
+            for _, pl in pairs(game.Players:GetPlayers()) do
+                if pl ~= p and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
+                    local root = pl.Character.HumanoidRootPart
+                    if not root:FindFirstChildWhichIsA("Highlight") then
+                        createESP(root, Color3.fromRGB(255,50,50), pl.Name)
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- ========== FARM ==========
+spawn(function()
+    while wait(1.2) do
+        if not s.farm then continue end
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v.Name and v.Name:lower():find("marsh") and v:IsA("BasePart") then
+                r.CFrame = CFrame.new(v.Position)
+                wait(0.1)
+                pcall(function() 
+                    firetouchinterest(r, v, 0)
+                    wait(0.05)
+                    firetouchinterest(r, v, 1)
+                end)
+                inv.raw = inv.raw + 1
+                break
+            end
+        end
+    end
+end)
+
+-- ========== COOK ==========
+spawn(function()
+    while wait(2) do
+        if not s.cook or inv.raw < 1 then continue end
+        local stove = nil
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v.Name and (v.Name:lower():find("stove") or v.Name:lower():find("kompor")) and v:IsA("BasePart") then
+                stove = v
+                break
+            end
+        end
+        if stove then
+            r.CFrame = CFrame.new(stove.Position.X, stove.Position.Y - 3.5, stove.Position.Z)
+            wait(0.5)
+            inv.raw = inv.raw - 1
+            inv.cooked = inv.cooked + 1
+        end
+    end
+end)
+
+-- ========== SELL ==========
+spawn(function()
+    while wait(2) do
+        if not s.sell or inv.cooked < 1 then continue end
+        local seller = workspace:FindFirstChild("Seller") or workspace:FindFirstChild("Vendor")
+        if seller and seller.PrimaryPart then
+            r.CFrame = CFrame.new(seller.PrimaryPart.Position + Vector3.new(0,0,3))
+            wait(0.5)
+        end
+        inv.cooked = inv.cooked - 1
+    end
+end)
+
+-- ========== TP ==========
+local spots = {
+    Vector3.new(124.5,33.2,-456.3),
+    Vector3.new(87.2,33.2,-412.8),
+    Vector3.new(156.9,33.2,-489.1),
+}
+spawn(function()
+    while wait(6) do
+        if s.tp then
+            r.CFrame = CFrame.new(spots[math.random(1,3)])
+        end
+    end
+end)
+
+-- ========== SPEED ==========
+spawn(function()
+    while wait(0.1) do
+        if s.speed then
+            h.WalkSpeed = 70
+        elseif h.WalkSpeed ~= 16 then
+            h.WalkSpeed = 16
+        end
+    end
+end)
+
+-- ========== NOCLIP ==========
+spawn(function()
+    while wait(0.1) do
+        if s.noclip then
+            for _, part in pairs(c:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end
+end)
+
+-- ========== ANTI AFK ==========
+local vu = game:GetService("VirtualUser")
+p.Idled:Connect(function()
+    vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+    wait(1)
+    vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+end)
+
+-- ========== UPDATE STATUS ==========
+local function updateStatus()
+    if statusText then
+        statusText.Text = "📦 " .. inv.raw .. " | 🍳 " .. inv.cooked
+    end
+end
+
+spawn(function()
+    while wait(0.5) do
+        updateStatus()
+    end
+end)
+
+-- ========== GUI STAY TO GET (BLUE THEME) ==========
+local gui = Instance.new("ScreenGui")
+gui.Name = "StayToGet"
+gui.Parent = p.PlayerGui
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 280, 0, 420)
+frame.Position = UDim2.new(0, 10, 0.5, -210)
+frame.BackgroundColor3 = Color3.fromRGB(10, 20, 50)
+frame.BackgroundTransparency = 0
+frame.BorderSizePixel = 0
+frame.ClipsDescendants = true
+frame.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = frame
+
+-- Title Bar (BIRU)
+local titleBar = Instance.new("Frame")
+titleBar.Size = UDim2.new(1,0,0,40)
+titleBar.BackgroundColor3 = Color3.fromRGB(30, 80, 200)
+titleBar.BackgroundTransparency = 0
+titleBar.BorderSizePixel = 0
+titleBar.Parent = frame
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 10)
+titleCorner.Parent = titleBar
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,-70,1,0)
+title.Position = UDim2.new(0,10,0,0)
+title.BackgroundTransparency = 1
+title.Text = "🔵 STAY TO GET 🔵"
+title.TextColor3 = Color3.fromRGB(255,255,255)
+title.TextSize = 13
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = titleBar
+
+-- Minimize
+local minBtn = Instance.new("TextButton")
+minBtn.Size = UDim2.new(0,30,1,0)
+minBtn.Position = UDim2.new(1,-65,0,0)
+minBtn.BackgroundTransparency = 1
+minBtn.Text = "─"
+minBtn.TextColor3 = Color3.fromRGB(255,255,255)
+minBtn.TextSize = 18
+minBtn.Font = Enum.Font.GothamBold
+minBtn.Parent = titleBar
+
+-- Close
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0,30,1,0)
+closeBtn.Position = UDim2.new(1,-35,0,0)
+closeBtn.BackgroundTransparency = 1
+closeBtn.Text = "✕"
+closeBtn.TextColor3 = Color3.fromRGB(255,255,255)
+closeBtn.TextSize = 15
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.Parent = titleBar
+
+-- Scroll
+local scroll = Instance.new("ScrollingFrame")
+scroll.Size = UDim2.new(1,0,1,-50)
+scroll.Position = UDim2.new(0,0,0,45)
+scroll.BackgroundTransparency = 1
+scroll.ScrollBarThickness = 4
+scroll.ScrollBarImageColor3 = Color3.fromRGB(30, 80, 200)
+scroll.Parent = frame
+
+local content = Instance.new("Frame")
+content.Size = UDim2.new(1,0,0,350)
+content.BackgroundTransparency = 1
+content.Parent = scroll
+scroll.CanvasSize = UDim2.new(0,0,0,content.AbsoluteSize.Y)
+
+-- Status (BIRU)
+local statusFrame = Instance.new("Frame")
+statusFrame.Size = UDim2.new(1,-20,0,35)
+statusFrame.Position = UDim2.new(0,10,0,5)
+statusFrame.BackgroundColor3 = Color3.fromRGB(20, 40, 80)
+statusFrame.BorderSizePixel = 0
+statusFrame.Parent = content
+
+local statusCorner = Instance.new("UICorner")
+statusCorner.CornerRadius = UDim.new(0, 6)
+statusCorner.Parent = statusFrame
+
+local statusText = Instance.new("TextLabel")
+statusText.Size = UDim2.new(1,0,1,0)
+statusText.BackgroundTransparency = 1
+statusText.Text = "📦 0 | 🍳 0"
+statusText.TextColor3 = Color3.fromRGB(100, 180, 255)
+statusText.TextSize = 12
+statusText.Font = Enum.Font.GothamSemibold
+statusText.Parent = statusFrame
+
+-- Tombol (BIRU)
+local btnY = {50, 95, 140, 185, 230, 275, 320}
+local btnTxt = {"👁️ ESP","🍬 FARM","🍳 COOK","💰 SELL","📍 TP","⚡ SPEED","🌀 NOCLIP"}
+local btnKey = {"esp","farm","cook","sell","tp","speed","noclip"}
+
+for i = 1, 7 do
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1,-20,0,38)
+    btn.Position = UDim2.new(0,10,0,btnY[i])
+    btn.BackgroundColor3 = Color3.fromRGB(15, 35, 70)
+    btn.Text = btnTxt[i] .. " 🔴"
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.TextSize = 13
+    btn.Font = Enum.Font.GothamSemibold
+    btn.BorderSizePixel = 0
+    btn.Parent = content
+    
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 6)
+    btnCorner.Parent = btn
+    
+    local isOn = false
+    btn.MouseButton1Click:Connect(function()
+        isOn = not isOn
+        s[btnKey[i]] = isOn
+        if isOn then
+            btn.BackgroundColor3 = Color3.fromRGB(0, 150, 200)
+            btn.Text = btnTxt[i] .. " 🟢"
+        else
+            btn.BackgroundColor3 = Color3.fromRGB(15, 35, 70)
+            btn.Text = btnTxt[i] .. " 🔴"
+        end
+    end)
+end
+
+-- Update canvas
+spawn(function()
+    while wait(0.1) do
+        scroll.CanvasSize = UDim2.new(0,0,0,content.AbsoluteSize.Y + 10)
+    end
+end)
+
+-- Minimize
+local minimized = false
+minBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    if minimized then
+        frame.Size = UDim2.new(0, 280, 0, 45)
+        scroll.Visible = false
+        minBtn.Text = "□"
+        title.Text = "🔵 STG [MIN] 🔵"
+    else
+        frame.Size = UDim2.new(0, 280, 0, 420)
+        scroll.Visible = true
+        minBtn.Text = "─"
+        title.Text = "🔵 STAY TO GET 🔵"
+    end
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
+
+-- Draggable
+local drag = false
+local dragStart, startPos
+
+titleBar.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then
+        drag = true
+        dragStart = i.Position
+        startPos = frame.Position
+    end
+end)
+
+titleBar.InputEnded:Connect(function()
+    drag = false
+end)
+
+titleBar.InputChanged:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseMovement and drag then
+        local delta = i.Position - dragStart
+        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+print("🔵 STAY TO GET LOADED 🔵")
+print("📌 BLUE THEME | Xeno Compatible")
